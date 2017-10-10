@@ -130,11 +130,27 @@ class polyhedron:
 
 		return None
 
+	def find_closest_vertex(self, vector):
+		advance = True
+		tvertex = 0
+		tdist = dist(self.vertices[tvertex], vector)
+		while advance:
+			advance = False
+			for tneigh in self.neighboors[tvertex]:
+				dist2neigh = dist(self.vertices[tneigh], vector)
+				if dist2neigh < tdist:
+					tdist = dist2neigh
+					tvertex = tneigh
+					advance = True
+		return tvertex
+
+
 	def vert_markers(self):
 		out = ""
 		for indx, vector in enumerate(self.vertices):
 			lon, lat = coors(vector)
 			out += "\t\tvar marker{0} = WE.marker([{1}, {2}]).addTo(earth);\n".format(indx, lat, lon)
+			out += "\t\tmarker%s.bindPopup(\"%.2f, %.2f\", {maxWidth: 150})\n" % (indx, lat, lon)
 		return out
 
 	def polygonize(self):
@@ -151,7 +167,7 @@ class polyhedron:
 
 		return out
 
-	def to_html(self):
+	def to_html(self, polygons = True, vertices = False):
 		bffr = """
 <!DOCTYPE HTML>
 <html>
@@ -165,7 +181,11 @@ class polyhedron:
           attribution: 'Copyright OpenStreetMap contributors'
         }).addTo(earth);"""
 
-		bffr += self.polygonize()
+		if vertices:
+			bffr += self.vert_markers() + "\n"
+
+		if polygons:
+			bffr += self.polygonize()
 
 		bffr += """
 		}
@@ -174,7 +194,7 @@ class polyhedron:
       html, body{padding: 0; margin: 0;}
       #earth_div{top: 0; right: 0; bottom: 0; left: 0; position: absolute !important;}
     </style>
-    <title>WebGL Earth API: Hello World</title>
+    <title>WebGL Earth API: Geodesic grid.</title>
   </head>
   <body onload="initialize()">
     <div id="earth_div"></div>
