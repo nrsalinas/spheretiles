@@ -111,7 +111,7 @@ class polyhedron:
 				neigh0 = self.neighboors[vi][0]
 				neigh1 = self.neighboors[vi][1]
 				for conneigh0, conneigh1 in [(x,y) for x in self.neighboors[neigh0]
-											for y in self.neighboors[neigh1]]:
+							for y in self.neighboors[neigh1] if x != vi and y != vi]:
 					if 0 < dist(self.vertices[conneigh0], self.vertices[conneigh1]) \
 							< dist(self.vertices[vi], self.vertices[neigh0]) * 1.2 \
 							and conneigh0 not in self.neighboors[vi] and conneigh1 \
@@ -150,7 +150,7 @@ class polyhedron:
 		for indx, vector in enumerate(self.vertices):
 			lon, lat = coors(vector)
 			out += "\t\tvar marker{0} = WE.marker([{1}, {2}]).addTo(earth);\n".format(indx, lat, lon)
-			out += "\t\tmarker%s.bindPopup(\"%.2f, %.2f\", {maxWidth: 150})\n" % (indx, lat, lon)
+			out += "\t\tmarker%s.bindPopup(\"<b>%s : %.2f, %.2f</b><br>%s</br>\", {maxWidth: 150})\n" % (indx, indx, lat, lon, self.neighboors[indx])
 		return out
 
 	def polygonize(self):
