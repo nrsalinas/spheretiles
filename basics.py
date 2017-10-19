@@ -60,6 +60,24 @@ def icosahedron_vertices():
 
 	return vertices
 
+def cross_point(point0, point1, point2, point3):
+	"""
+	Intersection between two great arc sections. `point0` and `point1` are the
+	tips of the section 0, `point2` and `point3` of section 1.
+	"""
+	plane0 = np.cross(point0, point1)
+	lenght0 = (plane0[0][0]**2 + plane0[0][1]**2 + plane0[0][2]**2)**0.5
+	plane0[0] /= lenght0
+	plane1 = np.cross(point2, point3)
+	lenght1 = (plane1[0][0]**2 + plane1[0][1]**2 + plane1[0][2]**2)**0.5
+	plane1[0] /= lenght1
+	director = np.cross(plane0, plane1)
+	if sum(director[0]) < 0:
+		director = np.cross(plane1, plane0)
+	lengthD = (director[0][0]**2 + director[0][1]**2 + director[0][2]**2)**0.5
+	director[0] /= lengthD
+	return director
+
 class polyhedron:
 
 	def __init__(self):
