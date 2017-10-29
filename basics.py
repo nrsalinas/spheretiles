@@ -148,6 +148,7 @@ class polyhedron:
 
 		return None
 
+
 	def find_closest_vertex(self, vector):
 		advance = True
 		tvertex = 0
@@ -161,6 +162,27 @@ class polyhedron:
 					tvertex = tneigh
 					advance = True
 		return tvertex
+
+
+	def voronoi_tessellation(self):
+		voronoi_vertices = []
+		for indver, vertex in enumerate(self.vertices):
+			arcs = {}
+			for neigh in self.neighboors[indver]:
+				disnei = [(x, dist(x,neigh)) for x in self.neighboors[indver]]
+				disnei = sorted(disnei, key = lambda x: x[1])
+				opposites = [x[0] for x in disnei[3:5]]
+				for valt in opposites:
+					if valt < neigh:
+						arcs[(valt, neigh)] = 0
+					else:
+						arcs[(neigh, valt)] = 0
+			for arc0 in arcs:
+				for arc1 in arcs:
+					if len(set(list(arc0) + list(arc1))) == 4:
+						vvv = [self.vertices[x] for x in arc0] + [self.vertices[x] for x in arc1]
+						poly_corner = cross_point(vvv[0], vvv[1], vvv[2], vvv[3])
+						voronoi_vertices.append(poly_corner)
 
 
 	def vert_markers(self):
