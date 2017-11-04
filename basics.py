@@ -68,14 +68,37 @@ def cross_point(point0, point1, point2, point3):
 	plane0 = np.cross(point0, point1)
 	lenght0 = (plane0[0][0]**2 + plane0[0][1]**2 + plane0[0][2]**2)**0.5
 	plane0[0] /= lenght0
+
 	plane1 = np.cross(point2, point3)
 	lenght1 = (plane1[0][0]**2 + plane1[0][1]**2 + plane1[0][2]**2)**0.5
 	plane1[0] /= lenght1
+
 	director = np.cross(plane0, plane1)
-	if sum(director[0]) < 0:
-		director = np.cross(plane1, plane0)
 	lengthD = (director[0][0]**2 + director[0][1]**2 + director[0][2]**2)**0.5
 	director[0] /= lengthD
+
+	# Check if director is in arc 0
+	dt = dist(point0, point1)
+	d0 = dist(point0, director)
+	d1 = dist(point1, director)
+	diff = round(dt, 3) - round((d0 + d1), 3)
+	if diff:
+		director = np.cross(plane1, plane0)
+		lengthD = (director[0][0]**2 + director[0][1]**2 + director[0][2]**2)**0.5
+		director[0] /= lengthD
+
+		# Check if director is in arc 0
+		dt = dist(point0, point1)
+		d0 = dist(point0, director)
+		d1 = dist(point1, director)
+		diff = round(dt, 3) - round((d0 + d1), 3)
+		if diff:
+			#print "diff:",diff
+			#print point0
+			#print point1
+			#print director
+			director = None
+
 	return director
 
 class polyhedron:
@@ -95,6 +118,7 @@ class polyhedron:
 						 10: [0, 3, 4, 6, 9],
 						 11: [1, 2, 5, 7, 8]}
 		self.triangles = []
+		self.voronoi_vertices = []
 		self.edges = []
 		for v0 in self.neighboors:
 			for v1 in self.neighboors[v0]:
@@ -165,11 +189,12 @@ class polyhedron:
 
 
 	def voronoi_tessellation(self):
-		voronoi_vertices = []
+		self.voronoi_vertices = []
 		for indver, vertex in enumerate(self.vertices):
+			print "Vertex",indver
 			arcs = {}
 			for neigh in self.neighboors[indver]:
-				disnei = [(x, dist(x,neigh)) for x in self.neighboors[indver]]
+				disnei = [(x, dist(self.vertices[x],self.vertices[neigh])) for x in self.neighboors[indver]]
 				disnei = sorted(disnei, key = lambda x: x[1])
 				opposites = [x[0] for x in disnei[3:5]]
 				for valt in opposites:
@@ -177,12 +202,14 @@ class polyhedron:
 						arcs[(valt, neigh)] = 0
 					else:
 						arcs[(neigh, valt)] = 0
-			for arc0 in arcs:
-				for arc1 in arcs:
-					if len(set(list(arc0) + list(arc1))) == 4:
-						vvv = [self.vertices[x] for x in arc0] + [self.vertices[x] for x in arc1]
-						poly_corner = cross_point(vvv[0], vvv[1], vvv[2], vvv[3])
-						voronoi_vertices.append(poly_corner)
+			print "\t",len(arcs)
+			for arc0,arc1 in combinations(arcs.keys(),2):
+				if len(set(list(arc0) + list(arc1))) == 4:
+					vvv = [self.vertices[x] for x in arc0] + [self.vertices[x] for x in arc1]
+					poly_corner = cross_point(vvv[0], vvv[1], vvv[2], vvv[3])
+					if isinstance(poly_corner, np.ndarray):
+						print "\t",poly_corner
+						self.voronoi_vertices.append(poly_corner)
 
 
 	def vert_markers(self):
