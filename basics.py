@@ -191,7 +191,8 @@ class polyhedron:
 	def voronoi_tessellation(self):
 		self.voronoi_vertices = []
 		for indver, vertex in enumerate(self.vertices):
-			print "Vertex",indver
+			this_polygon = []
+			#print "Vertex",indver
 			arcs = {}
 			for neigh in self.neighboors[indver]:
 				disnei = [(x, dist(self.vertices[x],self.vertices[neigh])) for x in self.neighboors[indver]]
@@ -202,14 +203,20 @@ class polyhedron:
 						arcs[(valt, neigh)] = 0
 					else:
 						arcs[(neigh, valt)] = 0
-			print "\t",len(arcs)
+			#print "\t",len(arcs)
 			for arc0,arc1 in combinations(arcs.keys(),2):
 				if len(set(list(arc0) + list(arc1))) == 4:
 					vvv = [self.vertices[x] for x in arc0] + [self.vertices[x] for x in arc1]
 					poly_corner = cross_point(vvv[0], vvv[1], vvv[2], vvv[3])
 					if isinstance(poly_corner, np.ndarray):
-						print "\t",poly_corner
-						self.voronoi_vertices.append(poly_corner)
+						#print "\t",poly_corner
+						this_polygon.append(poly_corner)
+
+			#
+			# Sort vertices clockwise before append them to object attribute!!
+			#
+
+			self.voronoi_vertices.append(this_polygon)
 
 
 	def vert_markers(self):
@@ -219,6 +226,21 @@ class polyhedron:
 			out += "\t\tvar marker{0} = WE.marker([{1}, {2}]).addTo(earth);\n".format(indx, lat, lon)
 			out += "\t\tmarker%s.bindPopup(\"<b>%s : %.2f, %.2f</b><br>%s</br>\", {maxWidth: 150})\n" % (indx, indx, lat, lon, self.neighboors[indx])
 		return out
+
+
+	def voronoi_html(self):
+		out = "\n"
+		for ip, pol in enumerate(self.voronoi_vertices):
+			out += "\t\tvar mypoly_{0} = WE.polygon([".format(ip)
+			#myvectors = map(lambda x: self.vertices[x], tri)
+			#print 'myvectors', myvectors
+			mycoors = map(lambda x: coors(x), pol)
+			#print 'mycoors', mycoors
+			out += ",".join(map(lambda x: "[%s , %s]"  % (x[1], x[0]), mycoors))
+			out += "]).addTo(earth);\n"
+
+		return out
+
 
 	def polygonize(self):
 		self.set_triangles()
@@ -234,7 +256,7 @@ class polyhedron:
 
 		return out
 
-	def to_html(self, polygons = True, vertices = False):
+	def to_html(self, voronoi = True, vertices = False, polygons = False):
 		bffr = """
 <!DOCTYPE HTML>
 <html>
@@ -250,6 +272,9 @@ class polyhedron:
 
 		if vertices:
 			bffr += self.vert_markers() + "\n"
+
+		if voronoi:
+			bffr += self.voronoi_html() + "\n"
 
 		if polygons:
 			bffr += self.polygonize()
