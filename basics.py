@@ -9,6 +9,21 @@ Santa Cruz de la Sierra: -63.1975, -17.7891666667
 """
 
 
+def normalize(vector):
+	nvector = vector / (sum(map(lambda x: x**2, vector[0]))**0.5)
+	return nvector
+
+
+def isNormal(vector):
+	out = bool()
+	length = sum(map(lambda x: x**2, vector[0]))**0.5
+	if round(length, 2) == 1.0:
+		out = True
+	else:
+		out = False
+	return out
+
+
 def vectorize(lon, lat):
 	x = cos(radians(lon)) * cos(radians(lat))
 	y = sin(radians(lon)) * cos(radians(lat))
@@ -93,10 +108,6 @@ def cross_point(point0, point1, point2, point3):
 		d1 = dist(point1, director)
 		diff = round(dt, 3) - round((d0 + d1), 3)
 		if diff:
-			#print "diff:",diff
-			#print point0
-			#print point1
-			#print director
 			director = None
 
 	return director
@@ -212,9 +223,25 @@ class polyhedron:
 						#print "\t",poly_corner
 						this_polygon.append(poly_corner)
 
-			#
-			# Sort vertices clockwise before append them to object attribute!!
-			#
+			ordered = [this_polygon.pop()]
+			for ite in xrange(len(this_polygon)):
+				icl = None
+				dicl = 14000
+				for iv,v in enumerate(this_polygon):
+					print v
+					print ordered[-1],"\n"
+					"""
+					if not isNormal(v):
+						print "vertex v is not normalized:",v
+					if not isNormal(ordered[-1]):
+						print "vertex ordered[-1] is not normalized:",ordered[-1]
+					"""
+					thisdist = dist(v, ordered[-1])
+					if thisdist < dicl:
+						icl = iv
+						dicl = thisdist
+				ordered += [this_polygon.pop(icl)]
+			this_polygon = ordered
 
 			self.voronoi_vertices.append(this_polygon)
 
